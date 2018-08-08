@@ -38,7 +38,7 @@ use strict;
 use warnings;
 
 use Constants;
-use Vcs::Svn;
+use Vcs::GitSvn;
 
 our @ISA = qw(Project);
 my $PID = "Chart";
@@ -46,20 +46,37 @@ my $PID = "Chart";
 sub new {
     my $class = shift;
     my $name = "jfreechart";
-    my $src  = "source";
+    my $src = "source";
     my $test = "tests";
-    my $vcs = Vcs::Svn->new($PID,
-                            "file://$REPO_DIR/$name/trunk",
-                            "$SCRIPT_DIR/projects/$PID/commit-db",
-                            \&_post_checkout);
+    my $vcs = Vcs::GitSvn->new($PID,
+        "$REPO_DIR/$name.git",
+        "$SCRIPT_DIR/projects/$PID/commit-db",
+        \&_post_checkout);
 
     return $class->SUPER::new($PID, $name, $vcs, $src, $test);
+}
+sub _build_db_cache {
+    my $db = shift;
+    open (IN, "<$db") or die "Cannot open commit-db $db: $!";
+    my $cache = {};
+    while (<IN>) {
+        chomp;
+        /([^,]+),(\d+)/ or die "Corrupted commit-db!";
+        $cache->{$1} = $2 ;
+    }
+    close IN;
+
+    return $cache;
 }
 
 sub _post_checkout {
     # Fix compilation errors if necessary
     @_ == 3 or die $ARG_ERROR;
     my ($self, $revision_id, $work_dir) = @_;
+
+    my $origCommitDB = _build_db_cache("$SCRIPT_DIR/projects/$PID/commit-db-orig");
+
+    $revision_id = $origCommitDB->{$revision_id};
 
     my $compile_errors = "$SCRIPT_DIR/projects/$PID/compile-errors/";
     opendir(DIR, $compile_errors) or die "could not find compile-error directory.";
