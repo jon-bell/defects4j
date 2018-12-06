@@ -29,6 +29,7 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
 #############################################################################-->
 <project name="Defects4J" basedir="${basedir}">
     <!-- Ensure basedir is properly set -->
+	<property environment="env"/>
     <property name="d4j.workdir" value="${basedir}" />
     <property name="d4j.properties" value="defects4j.build.properties" />
     <fail message="Directory ${d4j.workdir} is not a Defects4J working directory!">
@@ -99,7 +100,17 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     Run developer-written tests
 -->
     <target name="run.dev.tests" depends="compile.tests,update.all.tests" description="Run unit tests">
-        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="no" showOutput="true">
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true" jvm="${env.FLABUGJVM}/bin/java">
+		<jvmArg value="-DdiffFile=${env.FLABUGDIFF}" />
+<!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8888" />-->
+		<!--<jvmArg value="-Dphosphor.debug=true" />-->
+		<jvmArg value="-javaagent:${env.FLABUGJAR}" />
+		<jvmArg value="-Xbootclasspath/p:${env.FLABUGJAR}" />
+		<jvmArg value="-Dflabug.log=${env.FLABUGOUT}" />
+		<jvmArg value="-Xmx2g" />
+		<jvmArg value="-XX:OnOutOfMemoryError=kill -9 %p" />
+		<!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" />-->
+		<!--<jvmArg value="-Dphosphor.debug=true" />-->
             <classpath>
                 <!-- Make sure that instrumented classes appear at the beginning of the
                      classpath -->

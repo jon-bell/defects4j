@@ -1090,6 +1090,13 @@ sub _ant_call {
         print(OUT "$log");
         close(OUT);
     }
+   if(defined $ENV{'D4JLOG'})
+    {
+        open(OUT, ">>".$ENV{'D4JLOG'}) or die "Cannot open log file: $!";
+        print(OUT "$cmd\n");
+        print(OUT "$log");
+        close(OUT);
+    }
     return $ret;
 }
 
