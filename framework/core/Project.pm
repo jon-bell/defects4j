@@ -692,6 +692,28 @@ sub coverage_report {
 
 =pod
 
+  $project->tain_tracking(taint_lines_file, single_test, log_file)
+
+Performs tain tracking for all source code lines listed in F<taint_lines_file>.
+
+=cut
+sub tain_tracking {
+    @_ == 4 or die $ARG_ERROR;
+    my ($self, $taint_lines_file, $single_test, $log_file)  = @_;
+    my $work_dir = $self->{prog_root};
+
+    $single_test =~ /([^:]+)::([^:]+)/ or die "Wrong format for single test!";
+    my $single_test_opt = "-Dtest.entry.class=$1 -Dtest.entry.method=$2";
+
+    return $self->_ant_call("taint.run.dev.tests",
+                            "-DOUTFILE=$work_dir/failing_tests " .
+                            "-Dflabug.diff.file=$taint_lines_file " .
+                            "-Dflabug.log.file=$work_dir/.flabug.log.txt " .
+                            "$single_test_opt", $log_file);
+}
+
+=pod
+
   $project->mutate(instrument_classes, mut_ops)
 
 Mutates all classes listed in F<instrument_classes>, using all mutation operators

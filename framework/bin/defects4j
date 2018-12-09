@@ -111,6 +111,15 @@ $cmd_descr{"coverage"}="run code coverage analysis for a checked-out project ver
 
 =pod
 
+=item * L<B<export>|d4j::d4j-taint-tracking/>
+
+perform taint tracking for a checked-out project version using the Flabug tool.
+
+=cut
+$cmd_descr{"taint-tracking"}="perform taint tracking for a checked-out project version using the Flabug tool.";
+
+=pod
+
 =item * L<B<info>|d4j::d4j-info/>
 
 print information for a specific project or bug.

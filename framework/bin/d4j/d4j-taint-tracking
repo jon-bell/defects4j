@@ -1,0 +1,112 @@
+#-------------------------------------------------------------------------------
+# Copyright (c) 2014-2018 René Just, Darioush Jalali, and Defects4J contributors.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#-------------------------------------------------------------------------------
+
+=pod
+
+=head1 NAME
+
+d4j-taint-tracking -- perform taint tracking for a checked-out project version.
+
+=head1 SYNOPSIS
+
+  d4j-flabug [-w work_dir] [-t single_test] -i taint_lines
+
+=head1 DESCRIPTION
+
+This script executes all triggering test cases (or just one triggering test case
+if -t is specified) on a checked-out project version and performs taint tracking
+(using the Flabug tool) on a set of defined lines of code.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -w F<work_dir>
+
+The working directory of the checked-out project version (optional). Default is
+the current directory.
+
+=item -t C<single_test>
+
+Only run this single test method (optional). By default all triggering tests are
+executed. Format: <test_class>::<test_method>.
+
+=item -i F<taint_lines>
+
+Perform taint tracking for all lines of code listed in F<taint_lines>. Each row
+of F<taint_lines> file must follow the following format:
+  <java_file>:<line_number>:true, e.g., org/foo/Bar.java:34:true
+
+=back
+
+=cut
+
+use strict;
+use warnings;
+
+use Constants;
+use Utils;
+use Project;
+use Taint;
+use Getopt::Std;
+use Pod::Usage;
+
+my %cmd_opts;
+getopts('w:t:i:', \%cmd_opts) or pod2usage( { -verbose => 1, -input => __FILE__} );
+
+my $WORK_DIR    = Utils::get_abs_path($cmd_opts{w} // ".");
+my $SINGLE_TEST = $cmd_opts{t};
+my $TAINT       = $cmd_opts{i};
+
+if (! defined $TAINT) {
+    pod2usage( { -verbose => 1, -input => __FILE__} );
+}
+
+my $config = Utils::read_config_file("$WORK_DIR/$CONFIG");
+unless(defined $config) {
+    print(STDERR "$WORK_DIR is not a valid working directory!\n");
+    exit 1;
+}
+my $pid = $config->{$CONFIG_PID};
+my $vid = $config->{$CONFIG_VID};
+my $bid = Utils::check_vid($vid)->{bid};
+
+my $log_file = "$WORK_DIR/.taint-tracking.log";
+system("rm -f $log_file") if -e $log_file;
+
+# Instantiate project and set working directory
+my $project = Project::create_project($pid);
+$project->{prog_root} = $WORK_DIR;
+$project->compile($log_file) or die "Cannot compile source code!";
+$project->compile_tests($log_file) or die "Cannot compile test cases!";
+
+# Get all trigger test cases
+my $project_dir = "$SCRIPT_DIR/projects/$pid";
+my $trigger_tests = Utils::get_failing_tests("${project_dir}/trigger_tests/$bid");
+
+# Iterate over all trigger test cases
+foreach my $trigger_test (@{$trigger_tests->{methods}}) {
+    print("$trigger_test\n");
+    Taint::tracking($project, $TAINT, $trigger_test, $log_file) or die "Taint tracking has failed with test case $trigger_test";
+}
+
+1;

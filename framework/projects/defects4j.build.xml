@@ -29,7 +29,6 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
 #############################################################################-->
 <project name="Defects4J" basedir="${basedir}">
     <!-- Ensure basedir is properly set -->
-	<property environment="env"/>
     <property name="d4j.workdir" value="${basedir}" />
     <property name="d4j.properties" value="defects4j.build.properties" />
     <fail message="Directory ${d4j.workdir} is not a Defects4J working directory!">
@@ -46,6 +45,7 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     <!-- Dependencies used by all projects -->
     <property name="junit.jar"  value="${d4j.home}/framework/projects/lib/junit-4.11.jar"/>
     <property name="cobertura.jar" value="${d4j.home}/framework/projects/lib/cobertura-2.0.3.jar"/>
+    <property name="flabug-agent.jar" value="${d4j.home}/framework/lib/taint/flabug-agent.jar"/>
 
     <!-- Location of libraries of test generation tool-->
     <property name="d4j.dir.lib.testgen.gen" value="${d4j.home}/framework/lib/test_generation/generation"/>
@@ -100,17 +100,7 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     Run developer-written tests
 -->
     <target name="run.dev.tests" depends="compile.tests,update.all.tests" description="Run unit tests">
-        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true" jvm="${env.FLABUGJVM}/bin/java">
-		<jvmArg value="-DdiffFile=${env.FLABUGDIFF}" />
-<!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8888" />-->
-		<!--<jvmArg value="-Dphosphor.debug=true" />-->
-		<jvmArg value="-javaagent:${env.FLABUGJAR}" />
-		<jvmArg value="-Xbootclasspath/p:${env.FLABUGJAR}" />
-		<jvmArg value="-Dflabug.log=${env.FLABUGOUT}" />
-		<jvmArg value="-Xmx2g" />
-		<jvmArg value="-XX:OnOutOfMemoryError=kill -9 %p" />
-		<!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" />-->
-		<!--<jvmArg value="-Dphosphor.debug=true" />-->
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="no" showOutput="true">
             <classpath>
                 <!-- Make sure that instrumented classes appear at the beginning of the
                      classpath -->
@@ -395,6 +385,48 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     <target name="reset.cobertura.ser" if="classes.instrumented.uptodate">
         <copy file="${d4j.dir.classes.instrumented}/${d4j.file.cobertura.ser}"
               todir="${d4j.workdir}" overwrite="true" />
+    </target>
+
+<!--
+    Perform taint tracking with a developer-written test
+-->
+    <target name="taint.run.dev.tests" depends="compile.tests,update.all.tests" description="Run unit tests and perform tain tracking">
+        <!-- Required properties -->
+        <fail message="Property test.entry.class not set!" unless="test.entry.class" />
+        <fail message="Property test.entry.method not set!" unless="test.entry.method" />
+        <fail message="Property flabug.jar not set!" unless="flabug-agent.jar" />
+        <fail message="Property flabug.diff.file not set!" unless="flabug.diff.file" />
+        <fail message="Property flabug.log.file not set!" unless="flabug.log.file" />
+
+        <!-- Debug messages -->
+        <echo message="test.entry.class: ${test.entry.class}" />
+        <echo message="test.entry.method: ${test.entry.method}" />
+        <echo message="flabug-agent.jar: ${flabug-agent.jar}" />
+        <echo message="flabug.diff.file: ${flabug.diff.file}" />
+        <echo message="flabug.log.file: ${flabug.log.file}" />
+
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true">
+            <jvmArg value="-DdiffFile=${flabug.diff.file}" />
+            <!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8888" />-->
+            <!--<jvmArg value="-Dphosphor.debug=true" />-->
+            <jvmArg value="-javaagent:${flabug-agent.jar}" />
+            <jvmArg value="-Xbootclasspath/p:${flabug-agent.jar}" />
+            <jvmArg value="-Dflabug.log=${flabug.log.file}" />
+            <jvmArg value="-Xmx2g" />
+            <jvmArg value="-XX:OnOutOfMemoryError=kill -9 %p" />
+            <!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" />-->
+            <classpath>
+                <!-- Make sure that instrumented classes appear at the beginning of the
+                     classpath -->
+                <pathelement location="${d4j.dir.classes.instrumented}" />
+                <pathelement path="${formatter.jar}" />
+                <path refid="d4j.test.classpath"/>
+            </classpath>
+
+            <sysproperty key="OUTFILE" value="${OUTFILE}"/>
+            <formatter classname="edu.washington.cs.mut.testrunner.Formatter" usefile="false" />
+            <test name="${test.entry.class}" methods="${test.entry.method}" />
+        </junit>
     </target>
 
 </project>
