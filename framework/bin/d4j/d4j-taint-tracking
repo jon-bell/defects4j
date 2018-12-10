@@ -75,7 +75,7 @@ getopts('w:t:i:', \%cmd_opts) or pod2usage( { -verbose => 1, -input => __FILE__}
 
 my $WORK_DIR    = Utils::get_abs_path($cmd_opts{w} // ".");
 my $SINGLE_TEST = $cmd_opts{t};
-my $TAINT       = $cmd_opts{i};
+my $TAINT       = Utils::get_abs_path($cmd_opts{i});
 
 if (! defined $TAINT) {
     pod2usage( { -verbose => 1, -input => __FILE__} );
@@ -90,7 +90,7 @@ my $pid = $config->{$CONFIG_PID};
 my $vid = $config->{$CONFIG_VID};
 my $bid = Utils::check_vid($vid)->{bid};
 
-my $log_file = "$WORK_DIR/.taint-tracking.log";
+my $log_file = "$WORK_DIR/taint-tracking.log";
 system("rm -f $log_file") if -e $log_file;
 
 # Instantiate project and set working directory
@@ -103,10 +103,12 @@ $project->compile_tests($log_file) or die "Cannot compile test cases!";
 my $project_dir = "$SCRIPT_DIR/projects/$pid";
 my $trigger_tests = Utils::get_failing_tests("${project_dir}/trigger_tests/$bid");
 
+my $taint_output_file = "$WORK_DIR/flabug.output.txt";
+
 # Iterate over all trigger test cases
 foreach my $trigger_test (@{$trigger_tests->{methods}}) {
     print("$trigger_test\n");
-    Taint::tracking($project, $TAINT, $trigger_test, $log_file) or die "Taint tracking has failed with test case $trigger_test";
+    Taint::tracking($project, $TAINT, $trigger_test, $taint_output_file, $log_file) or die "Taint tracking has failed with test case $trigger_test";
 }
 
 1;

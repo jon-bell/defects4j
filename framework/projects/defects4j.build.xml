@@ -45,7 +45,9 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     <!-- Dependencies used by all projects -->
     <property name="junit.jar"  value="${d4j.home}/framework/projects/lib/junit-4.11.jar"/>
     <property name="cobertura.jar" value="${d4j.home}/framework/projects/lib/cobertura-2.0.3.jar"/>
+
     <property name="flabug-agent.jar" value="${d4j.home}/framework/lib/taint/flabug-agent.jar"/>
+    <property name="instrumented.jvm" value="${d4j.home}/framework/lib/taint/jre1.7.0_80-instrumented"/>
 
     <!-- Location of libraries of test generation tool-->
     <property name="d4j.dir.lib.testgen.gen" value="${d4j.home}/framework/lib/test_generation/generation"/>
@@ -394,24 +396,26 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
         <!-- Required properties -->
         <fail message="Property test.entry.class not set!" unless="test.entry.class" />
         <fail message="Property test.entry.method not set!" unless="test.entry.method" />
+        <fail message="Property instrumented.jvm not set!" unless="instrumented.jvm" />
         <fail message="Property flabug.jar not set!" unless="flabug-agent.jar" />
         <fail message="Property flabug.diff.file not set!" unless="flabug.diff.file" />
-        <fail message="Property flabug.log.file not set!" unless="flabug.log.file" />
+        <fail message="Property flabug.output.file not set!" unless="flabug.output.file" />
 
         <!-- Debug messages -->
         <echo message="test.entry.class: ${test.entry.class}" />
         <echo message="test.entry.method: ${test.entry.method}" />
+        <echo message="instrumented.jvm: ${instrumented.jvm}" />
         <echo message="flabug-agent.jar: ${flabug-agent.jar}" />
         <echo message="flabug.diff.file: ${flabug.diff.file}" />
-        <echo message="flabug.log.file: ${flabug.log.file}" />
+        <echo message="flabug.output.file: ${flabug.output.file}" />
 
-        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true">
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true" jvm="${instrumented.jvm}/bin/java">
             <jvmArg value="-DdiffFile=${flabug.diff.file}" />
             <!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8888" />-->
             <!--<jvmArg value="-Dphosphor.debug=true" />-->
             <jvmArg value="-javaagent:${flabug-agent.jar}" />
             <jvmArg value="-Xbootclasspath/p:${flabug-agent.jar}" />
-            <jvmArg value="-Dflabug.log=${flabug.log.file}" />
+            <jvmArg value="-Dflabug.log=${flabug.output.file}" />
             <jvmArg value="-Xmx2g" />
             <jvmArg value="-XX:OnOutOfMemoryError=kill -9 %p" />
             <!--<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" />-->

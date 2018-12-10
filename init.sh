@@ -111,5 +111,32 @@ new=$($cmd)
 [ "$old" != "$new" ] && unzip -q -u $GRADLE_ZIP
 
 cd "$BASE"
+
+################################################################################
+#
+# Download Flabug
+#
+echo
+echo "Setting up Flabug and an instrumented version of the JRE 1.7.0_80 ... "
+
+# FIXME
+# At the moment Flabug is in a private repository and there is not any public
+# version available. In order to configure it, execute the following commands:
+# ## Configure Flabug
+# $ mkdir -p defects4j/framework/lib/taint/
+# $ cd defects4j/framework/lib/taint/
+# 
+# $ git clone https://github.com/gmu-swe/flabug.git
+# $ cd flabug && mvn clean package -DskipTests=true
+# $ cp java-agent/target/flabug-agent-1.0-SNAPSHOT.jar to ../flabug-agent.jar
+# $ export FLABUG_AGENT_JAR="$(pwd)/../flabug-agent.jar"
+# 
+# ## Configure instrumented version of the JRE 1.7.0_80
+# $ cd defects4j/framework/lib/taint/
+# $ wget -nv http://people.cs.umass.edu/~rjust/defects4j/download/jdk-7u80-linux-x64.tar.gz
+# $ tar -xzf jdk-7u80-linux-x64.tar.gz -C jre1.7.0_80
+# $ export JAVA_HOME="$(pwd)/jre1.7.0_80"
+# $ bash __path_to_the_fault-localization-repo_taint_branch__/taint/instrument_java_jre.sh jre1.7.0_80-instrumented
+
 echo
 echo "Defects4J successfully initialized."

@@ -44,23 +44,23 @@ use Utils;
 
 =head2 Static subroutines
 
-  Taint::tracking(project, taint_lines_file, single_test, log_file)
+  Taint::tracking(project, taint_lines_file, single_test, $taint_output_file, log_file)
 
 Run taint tracking for a provided project version.
 
 F<taint_lines_file> is the name of a file that lists all source code lines which
 should be tainted. C<single_test> is the name of the test method to run, format
-of C<single_test> is <classname>::<methodname>.
+of C<single_test> is <classname>::<methodname>. F<taint_output_file> is the name
+of the file to where Flabug writes the list of source code lines that might be
+faulty.
 
 =cut
 sub tracking {
-    @_ == 4 or die $ARG_ERROR;
-    my ($project, $taint_lines_file, $single_test, $log_file) = @_;
+    @_ == 5 or die $ARG_ERROR;
+    my ($project, $taint_lines_file, $single_test, $taint_output_file, $log_file) = @_;
 
-    $project->tain_tracking($taint_lines_file, $single_test, $log_file) || die;
-
-    # TODO
-    #   - Check whether tain_tracking has produced the expected output files
+    $project->tain_tracking($taint_lines_file, $single_test, $taint_output_file, $log_file) || die;
+    -e $taint_output_file or die "Flabug file ($taint_output_file) does not exist!";
 }
 
 1;
