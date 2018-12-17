@@ -59,8 +59,14 @@ sub tracking {
     @_ == 5 or die $ARG_ERROR;
     my ($project, $taint_lines_file, $single_test, $taint_output_file, $log_file) = @_;
 
-    $project->tain_tracking($taint_lines_file, $single_test, $taint_output_file, $log_file) || die;
-    -e $taint_output_file or die "Flabug file ($taint_output_file) does not exist!";
+    $project->tain_tracking($taint_lines_file, $single_test, $taint_output_file, $log_file)
+        or die "Taint tracking has failed with test case $single_test";
+    if (! -e $taint_output_file) {
+        system("cat $log_file");
+        die "Flabug file ($taint_output_file) does not exist!";
+    }
+
+    return;
 }
 
 1;

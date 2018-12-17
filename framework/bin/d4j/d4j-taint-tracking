@@ -108,7 +108,7 @@ my $taint_output_file = "$WORK_DIR/flabug.output.txt";
 # Iterate over all trigger test cases
 foreach my $trigger_test (@{$trigger_tests->{methods}}) {
     print("$trigger_test\n");
-    Taint::tracking($project, $TAINT, $trigger_test, $taint_output_file, $log_file) or die "Taint tracking has failed with test case $trigger_test";
+    Taint::tracking($project, $TAINT, $trigger_test, $taint_output_file, $log_file);
 }
 
 1;
