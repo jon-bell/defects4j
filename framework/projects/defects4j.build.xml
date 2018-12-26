@@ -31,6 +31,8 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     <!-- Ensure basedir is properly set -->
     <property name="d4j.workdir" value="${basedir}" />
     <property name="d4j.properties" value="defects4j.build.properties" />
+    <property name="flabug.agent" value="" />
+    <property name="flabug.bootcp" value="" />
     <fail message="Directory ${d4j.workdir} is not a Defects4J working directory!">
         <condition>
             <not> <available file="${d4j.workdir}/${d4j.properties}" /> </not>
@@ -98,6 +100,21 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
         <fail unless="ant.refid:all.manual.tests" />
     </target>
 
+    <condition property="d4j.testjvm" else="${env.JAVA_HOME}" value="${env.FLABUGJVM}">
+        <isset property="env.FLABUGJVM" />
+    </condition>
+    <condition property="d4j.bootcp" else="-Dfoo=bar" value="-Xbootclasspath/p:${env.FLABUGJAR}">
+        <isset property="env.FLABUGJVM" />
+    </condition>
+    <condition property="d4j.agent" else="-Dfoo2=bar2" value="-javaagent:${env.FLABUGJAR}">
+        <isset property="env.FLABUGJVM" />
+    </condition>
+    <condition property="d4j.diffFile" else="-Dfoo3=bar3" value="-DdiffFile=${env.FLABUGDIFF}">
+        <isset property="env.FLABUGJVM" />
+    </condition>
+    <condition property="d4j.flabugLog" else="-Dfoo4=bar4" value="-Dflabug.log=${env.FLABUGOUT}">
+        <isset property="env.FLABUGJVM" />
+    </condition>
 <!--
     Run developer-written tests
 -->
@@ -111,6 +128,8 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
                 <pathelement path="${cobertura.jar}" />
                 <path refid="d4j.test.classpath"/>
             </classpath>
+
+            <formatter type="plain" usefile="false" /> <!-- to screen -->
 
             <sysproperty key="OUTFILE" value="${OUTFILE}"/>
             <formatter classname="edu.washington.cs.mut.testrunner.Formatter" usefile="false" />
