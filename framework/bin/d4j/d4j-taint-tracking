@@ -111,4 +111,6 @@ foreach my $trigger_test (@{$trigger_tests->{methods}}) {
     Taint::tracking($project, $TAINT, $trigger_test, $taint_output_file, $log_file);
 }
 
+system("cat $log_file");
+
 1;
