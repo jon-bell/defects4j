@@ -92,6 +92,7 @@ my $bid = Utils::check_vid($vid)->{bid};
 
 my $log_file = "$WORK_DIR/taint-tracking.log";
 system("rm -f $log_file") if -e $log_file;
+system("echo \"Taint-tracking start: \$(date)\" >> $log_file");
 
 # Instantiate project and set working directory
 my $project = Project::create_project($pid);
@@ -111,6 +112,7 @@ foreach my $trigger_test (@{$trigger_tests->{methods}}) {
     Taint::tracking($project, $TAINT, $trigger_test, $taint_output_file, $log_file);
 }
 
+system("echo \"Taint-tracking end: \$(date)\" >> $log_file");
 system("cat $log_file");
 
 1;
