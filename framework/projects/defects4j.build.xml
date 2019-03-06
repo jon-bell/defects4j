@@ -32,8 +32,6 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
 	<property environment="env"/>
     <property name="d4j.workdir" value="${basedir}" />
     <property name="d4j.properties" value="defects4j.build.properties" />
-    <property name="flabug.agent" value="" />
-    <property name="flabug.bootcp" value="" />
     <fail message="Directory ${d4j.workdir} is not a Defects4J working directory!">
         <condition>
             <not> <available file="${d4j.workdir}/${d4j.properties}" /> </not>
@@ -48,6 +46,9 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     <!-- Dependencies used by all projects -->
     <property name="junit.jar"  value="${d4j.home}/framework/projects/lib/junit-4.11.jar"/>
     <property name="cobertura.jar" value="${d4j.home}/framework/projects/lib/cobertura-2.0.3.jar"/>
+
+    <property name="tracer-agent.jar" value="${d4j.home}/framework/lib/slice/tracer.jar"/>
+    <property name="slicer.jar" value="${d4j.home}/framework/lib/slice/slicer.jar"/>
 
     <!-- Location of libraries of test generation tool-->
     <property name="d4j.dir.lib.testgen.gen" value="${d4j.home}/framework/lib/test_generation/generation"/>
@@ -98,34 +99,11 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
         <fail unless="ant.refid:all.manual.tests" />
     </target>
 
-    <condition property="d4j.testjvm" else="${env.JAVA_HOME}" value="${env.FLABUGJVM}">
-        <isset property="env.FLABUGJVM" />
-    </condition>
-    <condition property="d4j.bootcp" else="-Dfoo=bar" value="-Xbootclasspath/p:${env.FLABUGJAR}">
-        <isset property="env.FLABUGJVM" />
-    </condition>
-    <condition property="d4j.agent" else="-Dfoo2=bar2" value="-javaagent:${env.FLABUGJAR}">
-        <isset property="env.FLABUGJVM" />
-    </condition>
-    <condition property="d4j.diffFile" else="-Dfoo3=bar3" value="-DdiffFile=${env.FLABUGDIFF}">
-        <isset property="env.FLABUGJVM" />
-    </condition>
-    <condition property="d4j.flabugLog" else="-Dfoo4=bar4" value="-Dflabug.log=${env.FLABUGOUT}">
-        <isset property="env.FLABUGJVM" />
-    </condition>
 <!--
     Run developer-written tests
 -->
     <target name="run.dev.tests" depends="compile.tests,update.all.tests" description="Run unit tests">
-        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true" jvm="${d4j.testjvm}/bin/java">
-		<jvmArg value="${d4j.diffFile}" />
-		<jvmArg value="${d4j.bootcp}" />
-		<jvmArg value="${d4j.agent}" />
-		<jvmArg value="${d4j.flabugLog}" />
-		<jvmArg value="-Xmx2g" />
-		<jvmArg value="-XX:OnOutOfMemoryError=kill -9 %p" />
-<!-- 		<jvmArg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" /> -->
-		<!--<jvmArg value="-Dphosphor.debug=true" />-->
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true">
             <classpath>
                 <!-- Make sure that instrumented classes appear at the beginning of the
                      classpath -->
@@ -412,6 +390,62 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
     <target name="reset.cobertura.ser" if="classes.instrumented.uptodate">
         <copy file="${d4j.dir.classes.instrumented}/${d4j.file.cobertura.ser}"
               todir="${d4j.workdir}" overwrite="true" />
+    </target>
+
+<!--
+    Perform dynamic backward tracing with a developer-written test
+-->
+    <target name="slicing.trace.dev.tests" depends="compile.tests,update.all.tests" description="Run unit tests and perform dynamic backward tracing">
+        <!-- Required properties -->
+        <fail message="Property test.entry.class not set!" unless="test.entry.class" />
+        <fail message="Property test.entry.method not set!" unless="test.entry.method" />
+        <fail message="Property OUTFILE not set!" unless="OUTFILE" />
+        <fail message="Property trace.output.file not set!" unless="trace.output.file" />
+
+        <!-- Debug messages -->
+        <echo message="test.entry.class: ${test.entry.class}" />
+        <echo message="test.entry.method: ${test.entry.method}" />
+        <echo message="OUTFILE: ${OUTFILE}" />
+        <echo message="trace.output.file: ${trace.output.file}" />
+
+        <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true">
+            <jvmArg value="-javaagent:${tracer-agent.jar}=traceFile:${trace.output.file}" />
+            <classpath>
+                <!-- Make sure that instrumented classes appear at the beginning of the
+                     classpath -->
+                <pathelement location="${d4j.dir.classes.instrumented}" />
+                <pathelement path="${formatter.jar}" />
+                <path refid="d4j.test.classpath"/>
+            </classpath>
+
+            <sysproperty key="OUTFILE" value="${OUTFILE}"/>
+            <formatter classname="edu.washington.cs.mut.testrunner.Formatter" usefile="false" />
+            <test name="${test.entry.class}" methods="${test.entry.method}" />
+        </junit>
+    </target>
+
+<!--
+    Perform dynamic slicing.
+-->
+    <target name="slicing.slice" depends="" description="Perform dynamic slicing">
+        <!-- Required properties -->
+        <fail message="Property criteria not set!" unless="criteria" />
+        <fail message="Property trace.output.file not set!" unless="trace.output.file" />
+        <fail message="Property slice.output.file not set!" unless="slice.output.file" />
+
+        <!-- Debug messages -->
+        <echo message="criteria: ${criteria}" />
+        <echo message="trace.output.file: ${trace.output.file}" />
+        <echo message="slice.output.file: ${slice.output.file}" />
+
+        <java fork="true" failonerror="true" logError="true" append="false" classname="de.unisb.cs.st.javaslicer.slicing.Slicer" output="${slice.output.file}">
+            <classpath>
+                <pathelement path="${slicer.jar}" />
+            </classpath>
+            <arg value="-m" />
+            <arg value="${trace.output.file}" />
+            <arg value="${criteria}" />
+        </java>
     </target>
 
 </project>

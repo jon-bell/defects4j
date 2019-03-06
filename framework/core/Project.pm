@@ -692,6 +692,43 @@ sub coverage_report {
 
 =pod
 
+  $project->dynamic_tracing(single_test, single_test_log_file, trace_output_file, log_file)
+
+Performs dynamic backward tracing.
+
+=cut
+sub dynamic_tracing {
+    @_ == 5 or die $ARG_ERROR;
+    my ($self, $single_test, $single_test_log_file, $trace_output_file, $log_file)  = @_;
+
+    $single_test =~ /([^:]+)::([^:]+)/ or die "Wrong format for single test!";
+    my $single_test_opt = "-Dtest.entry.class=$1 -Dtest.entry.method=$2";
+
+    return $self->_ant_call("slicing.trace.dev.tests",
+                            "-DOUTFILE=$single_test_log_file " .
+                            "-Dtrace.output.file=$trace_output_file " .
+                            "$single_test_opt", $log_file);
+}
+
+=pod
+
+  $project->dynamic_slicing(criteria, trace_output_file, slice_output_file, log_file)
+
+Performs dynamic slicing.
+
+=cut
+sub dynamic_slicing {
+    @_ == 5 or die $ARG_ERROR;
+    my ($self, $criteria, $trace_output_file, $slice_output_file, $log_file)  = @_;
+
+    return $self->_ant_call("slicing.slice",
+                            "-Dcriteria=$criteria " .
+                            "-Dtrace.output.file=$trace_output_file " .
+                            "-Dslice.output.file=$slice_output_file ", $log_file);
+}
+
+=pod
+
   $project->mutate(instrument_classes, mut_ops)
 
 Mutates all classes listed in F<instrument_classes>, using all mutation operators

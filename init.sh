@@ -142,6 +142,27 @@ new_deps_ts=$(get_modification_timestamp $GRADLE_DEPS_ZIP)
 [ "$old_dists_ts" != "$new_dists_ts" ] && mkdir "dists" && unzip -q -u $GRADLE_DISTS_ZIP -d "dists"
 [ "$old_deps_ts" != "$new_deps_ts" ] && unzip -q -u $GRADLE_DEPS_ZIP
 
+################################################################################
+#
+# Download Java slicer (https://github.com/jon-bell/javaslicer)
+#
+echo
+echo "Setting up Java slicer"
+
+mkdir -p "$BASE/framework/lib/slice/"
+cd "$BASE/framework/lib/slice/"
+
+# Get Java slicer
+git clone git@github.com:jon-bell/javaslicer.git
+
+# Build it
+cd javaslicer
+mvn clean install -DskipTests=true
+
+# Move jar files up so that D4J can easily find them
+mv assembly/slicer.jar assembly/tracer.jar ../
+
 cd "$BASE"
+
 echo
 echo "Defects4J successfully initialized."

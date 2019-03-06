@@ -111,6 +111,15 @@ $cmd_descr{"coverage"}="run code coverage analysis for a checked-out project ver
 
 =pod
 
+=item * L<B<dynamic-slicing>|d4j::d4j-dynamic-slicing/>
+
+perform dynamic slicing for a checked-out project version using the Java slicer tool developed by Clemens Hammacher at Saarland University.
+
+=cut
+$cmd_descr{"dynamic-slicing"}="perform dynamic slicing for a checked-out project version using the Java slicer tool developed by Clemens Hammacher at Saarland University.";
+
+=pod
+
 =item * L<B<info>|d4j::d4j-info/>
 
 print information for a specific project or bug.
