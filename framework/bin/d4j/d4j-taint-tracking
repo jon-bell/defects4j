@@ -92,7 +92,6 @@ my $bid = Utils::check_vid($vid)->{bid};
 
 my $log_file = "$WORK_DIR/taint-tracking.log";
 system("rm -f $log_file") if -e $log_file;
-system("echo \"Taint-tracking start: \$(date)\" >> $log_file");
 
 # Instantiate project and set working directory
 my $project = Project::create_project($pid);
@@ -105,6 +104,8 @@ my $project_dir = "$SCRIPT_DIR/projects/$pid";
 my $trigger_tests = Utils::get_failing_tests("${project_dir}/trigger_tests/$bid");
 
 my $taint_output_file = "$WORK_DIR/flabug.output.txt";
+
+system("echo \"Taint-tracking start: \$(date)\" >> $log_file");
 
 # Iterate over all trigger test cases
 foreach my $trigger_test (@{$trigger_tests->{methods}}) {
