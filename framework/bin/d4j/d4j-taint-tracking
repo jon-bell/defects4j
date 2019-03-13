@@ -114,6 +114,5 @@ foreach my $trigger_test (@{$trigger_tests->{methods}}) {
 }
 
 system("echo \"Taint-tracking end: \$(date)\" >> $log_file");
-system("cat $log_file");
 
 1;
