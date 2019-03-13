@@ -103,7 +103,7 @@ $project->compile_tests($log_file) or die "Cannot compile test cases!";
 my $project_dir = "$SCRIPT_DIR/projects/$pid";
 my $trigger_tests = Utils::get_failing_tests("${project_dir}/trigger_tests/$bid");
 
-my $taint_output_file = "$WORK_DIR/flabug.output.txt";
+my $taint_output_file = "$WORK_DIR/taint-tracking.output.txt";
 
 system("echo \"Taint-tracking start: \$(date)\" >> $log_file");
 
