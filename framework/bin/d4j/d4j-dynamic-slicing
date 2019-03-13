@@ -129,6 +129,4 @@ system("echo \"Dynamic-slicing end: \$(date)\" >> $log_file");
 # Unique entries
 system("sort -u $slice_output_file > $slice_output_file.tmp && mv $slice_output_file.tmp $slice_output_file");
 
-system("cat $log_file"); # TODO just for debug purpose, remove it
-
 1;
