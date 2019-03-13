@@ -99,7 +99,7 @@ my $loaded_classes_file = "$SCRIPT_DIR/projects/$pid/loaded_classes/$bid.src";
 my $loaded_classes_tmp_file = "$WORK_DIR/loaded_classes";
 system("sed 's/\$/:/g' $loaded_classes_file > $loaded_classes_tmp_file");
 
-my $slice_output_file = "$WORK_DIR/slice.output.txt";
+my $slice_output_file = "$WORK_DIR/dynamic-slicing.output.txt";
 system(">$slice_output_file");
 
 system("echo \"Dynamic-slicing start: \$(date)\" >> $log_file");
