@@ -97,21 +97,21 @@ sub slicing {
     close($fh);
     defined $criteria or die "Stack trace of trigger test case is empty or not well formatted";
 
-    my $slice_output_tmp_file = "$slice_output_file.tmp";
-    system(">$slice_output_tmp_file");
+    my $super_slice_output_file = "$slice_output_file.all";
+    system(">$super_slice_output_file");
 
     # escape contructor method name
     $criteria =~ s/.<init>:/.\\<init\\>:/;
 
-    $project->dynamic_slicing($criteria, $trace_output_file, $slice_output_tmp_file, $log_file)
+    $project->dynamic_slicing($criteria, $trace_output_file, $super_slice_output_file, $log_file)
         or die "Dynamic-slicing has failed";
-    if (! -e $slice_output_tmp_file) {
+    if (! -e $super_slice_output_file) {
         system("cat $log_file");
-        die "Slice output file ($slice_output_tmp_file) does not exist!";
+        die "Slice output file ($super_slice_output_file) does not exist!";
     }
 
     # filter out lines that are not in the project
-    system("grep -Ff $loaded_classes_file $slice_output_tmp_file > $slice_output_file");
+    system("grep -Ff $loaded_classes_file $super_slice_output_file > $slice_output_file");
 
     return;
 }
