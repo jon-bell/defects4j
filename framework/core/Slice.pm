@@ -103,6 +103,7 @@ sub slicing {
     # escape contructor method name
     $criteria =~ s/.<init>:/.\\<init\\>:/;
     $criteria =~ s/.<clinit>:/.\\<clinit\\>:/;
+    $criteria = "$criteria:*";
 
     $project->dynamic_slicing($criteria, $trace_output_file, $super_slice_output_file, $log_file)
         or die "Dynamic-slicing has failed";
