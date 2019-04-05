@@ -410,6 +410,7 @@ project-specific build file ("project_id"/"project_id".build.xml) for the
 
         <junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="yes" showOutput="true">
             <jvmArg value="-javaagent:${tracer-agent.jar}=traceFile:${trace.output.file}" />
+            <jvmArg value="-XX:-UseSplitVerifier" />
             <classpath>
                 <!-- Make sure that instrumented classes appear at the beginning of the
                      classpath -->
